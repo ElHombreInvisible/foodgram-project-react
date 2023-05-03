@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Список покупок{% endblock %}
+
+{% block content %}
+  <!-- <h1 style="color: black; font-size: 42px;">Список покупок</h1>
+  <ul>
+    {% for item in ingredients %}
+    <li style="font-size: 24px">{{ item.ingredients__name }} - {{ item.sum_amount }} ({{item.ingredients__measurement_unit}})
+    </li>
+
+      {% empty %}
+    <li>Список покупок пуст</li>
+      {% endfor %}
+  </ul> -->
+  <h1 style="color: black; font-size: 42px;">Список покупок</h1>
+  <table style="color: black; font-size: 28px;">
+    {% for item in ingredients %}
+      <tr><td>{{ item.ingredients__name }}</td><td style="padding-left: 100px">{{ item.sum_amount }} ({{item.ingredients__measurement_unit}})</td></tr> <!--ряд с ячейками тела таблицы-->
+    {% empty %}
+      <p style="color: black; font-size: 24px;">Список покупок пуст</p>
+    {% endfor %}
+    </table>
+  <p style="color: black; font-size: 24px;">Дата составления: {% now "j F Y H:i" %}</p>
+{% endblock %}
