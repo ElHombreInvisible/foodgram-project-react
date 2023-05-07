@@ -1,15 +1,16 @@
 from django.contrib import admin
 
 from .models import (FavoriteRecipe, IngredientModel, RecipeIngredients,
-                     RecipeModel, RecipeTag, ShoppingCartRecipes, TagModel)
+                     RecipeModel, ShoppingCartRecipes, TagModel)
 
 
 class RecipeModelAdmin(admin.ModelAdmin):
-    list_display = ('author', 'name', 'published',
-                    'ingredients_list', 'tags_list', 'image',
+    list_display = ('author', 'name', 'published', 'tags_list',
+                    'ingredients_list', 'image',
                     'favoriting_count', 'id')
     search_fields = ('name',)
     list_filter = ('author', 'name', 'tags',)
+    filter_horizontal = ('tags',)
 
     @admin.display(description='Список ингредиентов')
     def ingredients_list(self, obj):
@@ -19,9 +20,9 @@ class RecipeModelAdmin(admin.ModelAdmin):
 
     @admin.display(description='Список тегов')
     def tags_list(self, obj):
-        return [x.name for x in obj.tags.all().prefetch_related('tags')]
+        return [x.name for x in obj.tags.all()]
 
-    @admin.display(description='Добавлено в избранное, раз')
+    @admin.display(description='В избранном, раз')
     def favoriting_count(self, obj):
         return obj.favoring_users.all().count()
 
@@ -45,12 +46,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class RecipeIngredientsAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'ingredients', 'amount')
-
-
-class RecipeTagsAdmin(admin.ModelAdmin):
-    list_display = ('recipe', 'tags')
-    search_fields = ('recipe',)
+    list_display = ('recipe', 'ingredients', 'amount', 'id')
 
 
 class FavoriteRecipeAdmin(admin.ModelAdmin):
@@ -65,6 +61,5 @@ admin.site.register(RecipeModel, RecipeModelAdmin)
 admin.site.register(TagModel, TagModelAdmin)
 admin.site.register(IngredientModel, IngredientAdmin)
 admin.site.register(RecipeIngredients, RecipeIngredientsAdmin)
-admin.site.register(RecipeTag, RecipeTagsAdmin)
 admin.site.register(FavoriteRecipe, FavoriteRecipeAdmin)
 admin.site.register(ShoppingCartRecipes, ShoppingCartRecipesAdmin)

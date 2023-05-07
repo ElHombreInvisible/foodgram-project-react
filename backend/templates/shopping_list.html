@@ -16,7 +16,7 @@
   <h1 style="color: black; font-size: 42px;">Список покупок</h1>
   <table style="color: black; font-size: 28px;">
     {% for item in ingredients %}
-      <tr><td>{{ item.ingredients__name }}</td><td style="padding-left: 100px">{{ item.sum_amount }} ({{item.ingredients__measurement_unit}})</td></tr> <!--ряд с ячейками тела таблицы-->
+      <tr><td>{{ item.ingredients__name }}</td><td style="padding-left: 100px">{{ item.sum_amount }} ({{item.ingredients__measurement_unit}})</td></tr>
     {% empty %}
       <p style="color: black; font-size: 24px;">Список покупок пуст</p>
     {% endfor %}

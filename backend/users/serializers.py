@@ -29,8 +29,8 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 
 class SubscribitionSerializer(serializers.ModelSerializer):
-    is_subscribed = SerializerMethodField('get_subscription')
-    recipes = RecipesForSubscribesSerializer(many=True, read_only=True)
+    is_subscribed = SerializerMethodField()
+    recipes = SerializerMethodField()
     recipe_count = SerializerMethodField('get_recipe_count')
 
     class Meta:
@@ -38,19 +38,23 @@ class SubscribitionSerializer(serializers.ModelSerializer):
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'recipes', 'recipe_count')
 
-    def get_subscription(self, obj):
+    def get_is_subscribed(self, obj):
         if self.context['request'].user.is_anonymous:
             return False
         return Follow.objects.filter(follower=self.context['request'].user,
                                      author=obj).exists()
 
+    def get_recipes(self, user):
+        recipes_limit = self.context['request'].GET.get('recipes_limit')
+        print(recipes_limit)
+        if not recipes_limit:
+            recipes = user.recipes.all()
+        else:
+            recipes = user.recipes.all()[:int(recipes_limit)]
+        if recipes:
+            serializer = RecipesForSubscribesSerializer(recipes, many=True)
+            return serializer.data
+        return []
+
     def get_recipe_count(self, obj):
         return RecipeModel.objects.filter(author=obj).count()
-
-    def to_representation(self, instance):
-        recipes_limit = int(self.context['request'].GET.get('recipes_limit'))
-        if not recipes_limit:  # Какое поведение необходимо при 0?
-            return super().to_representation(instance)
-        representation = super().to_representation(instance)
-        representation['recipes'] = representation['recipes'][:recipes_limit]
-        return representation

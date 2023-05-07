@@ -1,39 +1,33 @@
 from http import HTTPStatus
 
-from django.db import transaction
 from django.db.models import Sum
 from django.http import FileResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from recipes.models import (FavoriteRecipe, IngredientModel, RecipeIngredients,
-                            RecipeModel, TagModel)
+                            RecipeModel, ShoppingCartRecipes, TagModel)
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import PageLimitPagination
 from .permissions import AdminOrOwnerOrReadOnly
-from .serializers import (CreateIngredientAmountSerializer,
-                          CreateRecipeTagsSerializer, IngredientSerializer,
-                          PostRecipeSerializer, RecipeSerializer,
-                          TagSerializer)
+from .serializers import (FavoriteRecipeSerializer,
+                          IngredientSerializer, PostRecipeSerializer,
+                          RecipeSerializer, TagSerializer)
 from .utils import create_pdf
 
 
-class TagViewSet(viewsets.GenericViewSet,
-                 mixins.ListModelMixin,
-                 mixins.RetrieveModelMixin):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = TagModel.objects.all()
     serializer_class = TagSerializer
 
 
-class IngredientViewSet(viewsets.GenericViewSet,
-                        mixins.ListModelMixin,
-                        mixins.RetrieveModelMixin):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = IngredientModel.objects.all()
     serializer_class = IngredientSerializer
@@ -42,12 +36,7 @@ class IngredientViewSet(viewsets.GenericViewSet,
     filterset_class = IngredientFilter
 
 
-class RecipeViewSet(viewsets.GenericViewSet,
-                    mixins.CreateModelMixin,
-                    mixins.UpdateModelMixin,
-                    mixins.ListModelMixin,
-                    mixins.RetrieveModelMixin,
-                    mixins.DestroyModelMixin):
+class RecipeViewSet(viewsets.ModelViewSet):
 
     queryset = RecipeModel.objects.all()
     permission_classes = (AdminOrOwnerOrReadOnly, )
@@ -65,61 +54,10 @@ class RecipeViewSet(viewsets.GenericViewSet,
             return PostRecipeSerializer
         return RecipeSerializer
 
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        tags = serializer.initial_data.pop('tags')
-        ingredients = {}
-        ingredients['ingredients'] = serializer.initial_data.pop('ingredients')
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        tagserializer = CreateRecipeTagsSerializer(data={'id': tags},
-                                                   context=serializer.instance)
-        tagserializer.is_valid(raise_exception=True)
-        tagserializer.save()
-        ingredients_serializer = CreateIngredientAmountSerializer(
-                                       data=ingredients,
-                                       context=serializer.instance)
-
-        ingredients_serializer.is_valid(raise_exception=True)
-        ingredients_serializer.save()
-        recipe = RecipeSerializer(serializer.instance,
-                                  context={'request': request})
-        return Response(recipe.data, status=HTTPStatus.CREATED)
-
-    @transaction.atomic
-    def update(self, request, *args, **kwargs):
-        recipe = RecipeModel.objects.filter(pk=kwargs['pk']).first()
-        serializer = self.get_serializer(data=request.data)
-        tags = serializer.initial_data.pop('tags')
-        tagserializer = CreateRecipeTagsSerializer(data={'id': tags},
-                                                   context=recipe)
-        tagserializer.is_valid(raise_exception=True)
-        tagserializer.update(instance=recipe,
-                             validated_data=tagserializer.data)
-        ingredients = {}
-        ingredients['ingredients'] = serializer.initial_data.pop('ingredients')
-        ingredients_serializer = CreateIngredientAmountSerializer(
-                                       data=ingredients,
-                                       context=recipe)
-        ingredients_serializer.is_valid(raise_exception=True)
-        ingredients_serializer.update(
-            validated_data=ingredients_serializer.data,
-            instance=recipe
-            )
-        serializer.is_valid(raise_exception=True)
-        serializer.update(instance=recipe,
-                          validated_data=serializer.validated_data)
-        serializer = RecipeSerializer(recipe, context={'request': request})
-        return Response(serializer.data, status=HTTPStatus.OK)
-
-    @action(detail=True, methods=['POST', 'DELETE'])
+    @action(detail=True, methods=['POST', 'DELETE'],
+            permission_classes=(IsAuthenticated,))
     def favorite(self, context, pk=None):
-        recipe_qs = RecipeModel.objects.filter(pk=pk)
-        if not recipe_qs.exists():
-            return Response({'errors': 'Рецепта не существует'},
-                            status=HTTPStatus.NOT_FOUND)
-        recipe = recipe_qs.first()
+        recipe = get_object_or_404(RecipeModel, pk=pk)
         in_favorite = FavoriteRecipe.objects.filter(user=context.user,
                                                     recipe=recipe)
         if context.method == 'POST':
@@ -128,13 +66,11 @@ class RecipeViewSet(viewsets.GenericViewSet,
                                 status=HTTPStatus.BAD_REQUEST)
             FavoriteRecipe.objects.create(user=context.user,
                                           recipe=recipe)
-            data = {
-                'id': recipe.id,
-                'name': recipe.name,
-                'image': self.request.build_absolute_uri(recipe.image.url),
-                'cooking_time': recipe.cooking_time,
-                    }
-            return Response(data=data, status=HTTPStatus.CREATED)
+            serializer = FavoriteRecipeSerializer(
+                recipe,
+                context={'request': context}
+                )
+            return Response(data=serializer.data, status=HTTPStatus.CREATED)
         else:
             if not in_favorite.exists():
                 return Response(
@@ -144,6 +80,32 @@ class RecipeViewSet(viewsets.GenericViewSet,
             in_favorite.delete()
             return Response(status=HTTPStatus.NO_CONTENT)
 
+    @action(detail=True, methods=['POST', 'DELETE'],
+            permission_classes=(IsAuthenticated,))
+    def shopping_cart(self, context, pk=None):
+        recipe = get_object_or_404(RecipeModel, pk=pk)
+        in_cart = ShoppingCartRecipes.objects.filter(user=context.user,
+                                                     recipe=recipe)
+        if context.method == 'POST':
+            if in_cart.exists():
+                return Response({'errors': 'рецепт уже в списках покупок'},
+                                status=HTTPStatus.BAD_REQUEST)
+            ShoppingCartRecipes.objects.create(user=context.user,
+                                               recipe=recipe)
+            serializer = FavoriteRecipeSerializer(
+                recipe,
+                context={'request': context}
+                )
+            return Response(data=serializer.data, status=HTTPStatus.CREATED)
+        else:
+            if not in_cart.exists():
+                return Response(
+                    {'errors': 'рецепт не в списке покупок'},
+                    status=HTTPStatus.BAD_REQUEST
+                    )
+            in_cart.delete()
+            return Response(status=HTTPStatus.NO_CONTENT)
+
     @action(detail=False, methods=['GET'],
             permission_classes=(IsAuthenticated,),
             url_name='download_shopping_cart',
@@ -151,9 +113,12 @@ class RecipeViewSet(viewsets.GenericViewSet,
     def download_shopping_cart(self, context, pk=None):
         template = 'shopping_list.html'
         ingredients = RecipeIngredients.objects.values(
-            'ingredients__name', 'ingredients__measurement_unit').annotate(
+            'ingredients__name',
+            'ingredients__measurement_unit'
+            ).annotate(
                 sum_amount=Sum('amount')).filter(
-                    recipe__favoring_users__user=context.user)
+                    recipe__recipes_in_shopping_card__user=context.user
+                    )
         context = {
             'ingredients': ingredients
         }

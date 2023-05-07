@@ -1,6 +1,4 @@
-from rest_framework.permissions import BasePermission
-
-SAFE_METHODS = ['GET']
+from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
 class AdminOrOwnerOrReadOnly(BasePermission):
