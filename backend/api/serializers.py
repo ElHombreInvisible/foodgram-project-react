@@ -5,12 +5,10 @@ from rest_framework.serializers import SerializerMethodField
 from rest_framework.validators import ValidationError
 
 from recipes.models import (FavoriteRecipe, IngredientModel, RecipeIngredients,
-                            RecipeModel,  ShoppingCartRecipes,
-                            TagModel)
+                            RecipeModel, ShoppingCartRecipes, TagModel)
 from users.models import Follow, User
 
 from .serializer_fields import Base64ImageField
-
 
 RecipeTag = RecipeModel.tags.through
 
@@ -102,10 +100,9 @@ class CreateIngredientAmountSerializer(serializers.ModelSerializer):
 class PostRecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField(allow_null=True, required=True)
     tags = serializers.PrimaryKeyRelatedField(
-        queryset=TagModel.objects.all(), many=True
+        queryset=TagModel.objects.all(), many=True,
         )
-    ingredients = CreateIngredientAmountSerializer(many=True,
-                                                   source='recipe_ingredients')
+    ingredients = CreateIngredientAmountSerializer(many=True)
 
     class Meta:
         model = RecipeModel
@@ -116,38 +113,35 @@ class PostRecipeSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         author = self.context['request'].user
         tags = validated_data.pop('tags')
-        ingredietns = validated_data.pop('recipe_ingredients')
+        ingredietns = validated_data.pop('ingredients')
         recipe = RecipeModel.objects.create(**validated_data,
                                             author=author)
+        to_create = []
         for elem in ingredietns:
-            RecipeIngredients.objects.create(ingredients=elem['id'],
-                                             recipe=recipe,
-                                             amount=elem['amount'])
-        for tag in tags:
-            RecipeTag.objects.create(recipemodel=recipe, tagmodel=tag)
+            to_create.append(RecipeIngredients(ingredients=elem['id'],
+                                               recipe=recipe,
+                                               amount=elem['amount']))
+        RecipeIngredients.objects.bulk_create(to_create)
+        recipe.tags.set(tags)
         return recipe
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        ingredietns = validated_data.pop('recipe_ingredients')
+        if ingredients:
+            instance.ingredients.clear()
+            to_create = []
+            for elem in ingredients:
+                to_create.append(RecipeIngredients(ingredients=elem['id'],
+                                                   recipe=instance,
+                                                   amount=elem['amount']))
+            RecipeIngredients.objects.bulk_create(to_create)
+        if tags:
+            instance.tags.clear()
+            instance.tags.set(tags)
         if instance.image is not None:
             instance.image.delete()
-        for elem in ingredietns:
-            defaults = {'amount': elem['amount']}
-            RecipeIngredients.objects.update_or_create(
-                ingredients=elem['id'],
-                recipe=instance,
-                defaults=defaults)
-        ingredients = [x['id'] for x in ingredietns]
-        RecipeIngredients.objects.filter(
-            ~Q(ingredients__in=ingredients),
-            recipe=instance
-            ).delete()
-        for tag in tags:
-            RecipeTag.objects.get_or_create(recipemodel=instance, tagmodel=tag)
-        RecipeTag.objects.filter(~Q(tagmodel__in=tags),
-                                 recipemodel=instance).delete()
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -155,11 +149,11 @@ class PostRecipeSerializer(serializers.ModelSerializer):
         return new.data
 
     def validate_ingredients(self, obj):
-        if obj == []:
+        if obj == [] and self.context['request'].method != 'PUT':
             raise ValidationError("Ingredients list must not be empty")
         return obj
 
     def validate_tags(self, obj):
-        if obj == []:
+        if obj == [] and self.context['request'].method != 'PUT':
             raise ValidationError("Tags list must not be empty")
         return obj

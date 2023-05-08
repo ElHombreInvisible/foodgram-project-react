@@ -15,9 +15,9 @@ from recipes.models import (FavoriteRecipe, IngredientModel, RecipeIngredients,
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import PageLimitPagination
 from .permissions import AdminOrOwnerOrReadOnly
-from .serializers import (FavoriteRecipeSerializer,
-                          IngredientSerializer, PostRecipeSerializer,
-                          RecipeSerializer, TagSerializer)
+from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
+                          PostRecipeSerializer, RecipeSerializer,
+                          TagSerializer)
 from .utils import create_pdf
 
 
@@ -50,7 +50,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return super().perform_destroy(instance)
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PATCH'):
+        if self.request.method in ('POST', 'PUT', 'PATCH'):
             return PostRecipeSerializer
         return RecipeSerializer
 

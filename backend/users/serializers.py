@@ -1,16 +1,11 @@
 from rest_framework import serializers
 from rest_framework.serializers import SerializerMethodField
 
+from api.serializers import FavoriteRecipeSerializer
+
 from recipes.models import RecipeModel
 
 from .models import Follow, User
-
-
-class RecipesForSubscribesSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = RecipeModel
-        fields = ('id', 'name', 'cooking_time')
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -46,13 +41,13 @@ class SubscribitionSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, user):
         recipes_limit = self.context['request'].GET.get('recipes_limit')
-        print(recipes_limit)
         if not recipes_limit:
             recipes = user.recipes.all()
         else:
             recipes = user.recipes.all()[:int(recipes_limit)]
         if recipes:
-            serializer = RecipesForSubscribesSerializer(recipes, many=True)
+            serializer = FavoriteRecipeSerializer(recipes, many=True,
+                                                  context=self.context)
             return serializer.data
         return []
 

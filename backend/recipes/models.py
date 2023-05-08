@@ -99,19 +99,6 @@ class RecipeIngredients(models.Model):
         return f'{self.ingredients} в "{self.recipe}"'
 
 
-# class RecipeTag(models.Model):
-#     recipe = models.ForeignKey(RecipeModel, on_delete=models.CASCADE,
-#                                related_name='tag_recipes')
-#     tags = models.ForeignKey(TagModel, on_delete=models.CASCADE,
-#                              related_name='tags')
-
-#     class Meta:
-#         constraints = [
-#           UniqueConstraint(fields=['recipe', 'tags'],
-#                            name='unique_tags'),
-#         ]
-
-
 class FavoriteRecipe(models.Model):
     user = models.ForeignKey(User, related_name='favorite_recipes',
                              on_delete=models.CASCADE)
