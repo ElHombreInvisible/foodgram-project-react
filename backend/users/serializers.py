@@ -2,7 +2,6 @@ from rest_framework import serializers
 from rest_framework.serializers import SerializerMethodField
 
 from api.serializers import FavoriteRecipeSerializer
-
 from recipes.models import RecipeModel
 
 from .models import Follow, User
