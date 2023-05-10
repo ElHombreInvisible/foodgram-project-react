@@ -148,11 +148,11 @@ class PostRecipeSerializer(serializers.ModelSerializer):
         return new.data
 
     def validate_ingredients(self, obj):
-        if obj == [] and self.context['request'].method != 'PUT':
+        if len(obj) == 0 and self.context['request'].method != 'PATCH':
             raise ValidationError("Ingredients list must not be empty")
         return obj
 
     def validate_tags(self, obj):
-        if obj == [] and self.context['request'].method != 'PUT':
+        if len(obj) == 0 and self.context['request'].method != 'PATCH':
             raise ValidationError("Tags list must not be empty")
         return obj
