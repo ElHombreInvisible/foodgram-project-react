@@ -18,9 +18,9 @@ jobs:
           pip install flake8 pep8-naming flake8-return flake8-isort
       - name: flake8 tests
         run: |
-        pwd
-        ls
-        python -m flake8
+          pwd
+          ls
+          python -m flake8
 
   send_message:
     runs-on: ubuntu-latest
