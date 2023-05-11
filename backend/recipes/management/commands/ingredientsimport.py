@@ -7,9 +7,9 @@ from recipes.models import IngredientModel
 
 
 class Command(BaseCommand):
-    help = 'Импортирует модели ингредиентов из JSON-файла.\n'\
-            'Путь к файлу указывается относительно manage.py,'\
-            'Либо указвается абсолютный путь до файла.'
+    help = 'Импортирует модели ингредиентов из JSON-файла.\n'
+    + 'Путь к файлу указывается относительно manage.py,'
+    + 'Либо указвается абсолютный путь до файла.'
 
     def handle(self, *args, **options):
         if not options['path']:

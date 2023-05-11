@@ -71,14 +71,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 context={'request': context}
                 )
             return Response(data=serializer.data, status=HTTPStatus.CREATED)
-        else:
-            if not in_favorite.exists():
-                return Response(
-                    {'errors': 'подписки на рецепт не существует'},
-                    status=HTTPStatus.BAD_REQUEST
-                    )
-            in_favorite.delete()
-            return Response(status=HTTPStatus.NO_CONTENT)
+        if not in_favorite.exists():
+            return Response(
+                {'errors': 'подписки на рецепт не существует'},
+                status=HTTPStatus.BAD_REQUEST
+                )
+        in_favorite.delete()
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=True, methods=['POST', 'DELETE'],
             permission_classes=(IsAuthenticated,))
@@ -97,14 +96,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 context={'request': context}
                 )
             return Response(data=serializer.data, status=HTTPStatus.CREATED)
-        else:
-            if not in_cart.exists():
-                return Response(
-                    {'errors': 'рецепт не в списке покупок'},
-                    status=HTTPStatus.BAD_REQUEST
-                    )
-            in_cart.delete()
-            return Response(status=HTTPStatus.NO_CONTENT)
+        if not in_cart.exists():
+            return Response(
+                {'errors': 'рецепт не в списке покупок'},
+                status=HTTPStatus.BAD_REQUEST
+                )
+        in_cart.delete()
+        return Response(status=HTTPStatus.NO_CONTENT)
 
     @action(detail=False, methods=['GET'],
             permission_classes=(IsAuthenticated,),
