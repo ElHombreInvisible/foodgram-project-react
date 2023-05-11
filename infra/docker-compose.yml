@@ -1,17 +1,56 @@
-version: '3.3'
+version: '3.8'
 services:
-
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - db_volume:/var/lib/postgresql/data/
+    environment:
+      - DB_ENGINE=${DB_ENGINE}
+      - DB_NAME=${DB_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+  backend:
+    image: elhombreinvisible/foodgram:latest
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - static_value:/media/
+      - media_value:/static/
+      #- templates_value:/templates/
+    environment:
+      - DB_ENGINE=${DB_ENGINE}
+      - DB_NAME=${DB_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
   frontend:
     build:
       context: ../frontend
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
+    depends_on:
+      - db
+      - backend
   nginx:
-    image: nginx:1.19.3
+    image: nginx:1.21.3-alpine
     ports:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
+    depends_on:
+      - db
+      - backend
+
+volumes:
+  db_volume:
+  static_value:
+  media_value:
+  #templates_value:
