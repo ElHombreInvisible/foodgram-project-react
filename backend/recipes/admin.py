@@ -4,11 +4,6 @@ from .models import (FavoriteRecipe, IngredientModel, RecipeIngredients,
                      RecipeModel, ShoppingCartRecipes, TagModel)
 
 
-class RecipeTagsInline(admin.TabularInline):
-    model = RecipeModel.tags.through
-    extra = 3
-
-
 class RecipeIngredientsInline(admin.TabularInline):
     model = RecipeIngredients
     extra = 3
@@ -21,7 +16,7 @@ class RecipeModelAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = ('author', 'name', 'tags',)
     filter_horizontal = ('tags',)
-    inlines = (RecipeTagsInline, RecipeIngredientsInline)
+    inlines = (RecipeIngredientsInline,)
 
     @admin.display(description='Список ингредиентов')
     def ingredients_list(self, obj):

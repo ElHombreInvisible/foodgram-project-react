@@ -32,7 +32,7 @@ SECRET_KEY = os.getenv(
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'corsheaders',
     'recipes',
     'api',
     'users',
@@ -59,6 +60,7 @@ AUTH_USER_MODEL = 'users.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -100,11 +102,12 @@ else:
     DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        #'ENGINE': 'django.db.backends.postgresql_psycopg2', # или postgresql?
+        #'ENGINE': 'django.db.backends.postgresql_psycopg2', # или psycopg2
         'NAME': os.getenv('DB_NAME', default='postgres'),
         'USER': os.getenv('POSTGRES_USER', default='postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='DerParol'),
-        'HOST': os.getenv('DB_HOST', default='127.0.0.1'), 
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD',
+                               default='Thispasswordisthirtyonesymbols!'),
+        'HOST': os.getenv('DB_HOST', default='db'), 
         'PORT': os.getenv('DB_PORT', default='5432'),
     }
 }
@@ -113,14 +116,14 @@ else:
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication', -- Ломает CSRF политику
         'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ]
 }
-
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DJOSER = {
     'TOKEN_MODEL': 'rest_framework.authtoken.models.Token',
     'PERMISSIONS': {
@@ -143,6 +146,20 @@ DJOSER = {
         'user': 'users.serializers.AuthorSerializer',
     }
 }
+CORS_ALLOWED_ORIGINS = [
+    'http://127.0.0.1:80',
+    'http://localhost:80',
+    'http://nginx-1:80',
+]
+
+# CORS_ALLOW_METHODS = (
+#     "DELETE",
+#     "GET",
+#     "OPTIONS",
+#     "PATCH",
+#     "POST",
+#     "PUT",
+# )
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -178,13 +195,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = (BASE_DIR / 'static')
 
-STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = (BASE_DIR / 'media')
-
+# STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 

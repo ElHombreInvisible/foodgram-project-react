@@ -16,6 +16,11 @@ User = get_user_model()
 
 class UserViewSet(UserViewSet):
 
+    @action(methods=["get"], detail=False)
+    def me(self, request, *args, **kwargs):
+        self.get_object = self.get_instance
+        return self.retrieve(request, *args, **kwargs)
+
     @action(detail=True,
             methods=['post', 'delete'],
             url_path='subscribe',

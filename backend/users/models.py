@@ -19,11 +19,11 @@ class User(AbstractUser):
         constraints = [
             CheckConstraint(
                 check=~Q(username__iexact="me"),
-                name='"me" username constraint'
+                name="'me' username constraint"
             ),
             CheckConstraint(
                 check=~Q(username__iexact="set_password"),
-                name='"set_password" username constraint'
+                name="'set_password' username constraint"
             )
         ]
         ordering = ['-pk']
