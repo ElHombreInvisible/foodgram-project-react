@@ -38,5 +38,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://infra-backend-1:8000/"
+  "proxy": "http://infra_backend_1:8000/"
 }
