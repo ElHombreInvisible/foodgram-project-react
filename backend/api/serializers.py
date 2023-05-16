@@ -139,7 +139,8 @@ class PostRecipeSerializer(serializers.ModelSerializer):
         if tags:
             instance.tags.clear()
             instance.tags.set(tags)
-        if instance.image is not None:
+        if (instance.image is not None and
+                validated_data.get('image') is not None):
             instance.image.delete()
         return super().update(instance, validated_data)
 
@@ -148,11 +149,11 @@ class PostRecipeSerializer(serializers.ModelSerializer):
         return new.data
 
     def validate_ingredients(self, obj):
-        if len(obj) == 0 and self.context['request'].method != 'PATCH':
+        if len(obj) == 0:
             raise ValidationError("Ingredients list must not be empty")
         return obj
 
     def validate_tags(self, obj):
-        if len(obj) == 0 and self.context['request'].method != 'PATCH':
+        if len(obj) == 0:
             raise ValidationError("Tags list must not be empty")
         return obj
