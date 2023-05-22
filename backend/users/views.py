@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .models import Follow
 from .pagination import PageLimitPagination
-from .serializers import AuthorSerializer, SubscribitionSerializer
+from .serializers import SubscribitionSerializer
 
 User = get_user_model()
 
@@ -50,8 +50,9 @@ class UserViewSet(UserViewSet):
                 else:
                     Follow.objects.create(follower=request.user,
                                           author=following)
-                    data = AuthorSerializer(following,
-                                            context={'request': request}).data
+                    data = SubscribitionSerializer(
+                        following,  # data = AuthorSerializer(following,
+                        context={'request': request}).data
                     status = HTTPStatus.CREATED
         else:
             data = {'detail': 'Страница не найдена.'}
