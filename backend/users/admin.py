@@ -9,5 +9,11 @@ class FollowAdmin(admin.ModelAdmin):
     search_fields = ('following',)
 
 
-admin.site.register(User, UserAdmin)
+class MyUserAdmin(UserAdmin):
+    model = User
+    list_display = ('id', 'username')
+
+
+admin.site.register(User, MyUserAdmin)
+# admin.site.register(User, UserAdmin)
 admin.site.register(Follow, FollowAdmin)

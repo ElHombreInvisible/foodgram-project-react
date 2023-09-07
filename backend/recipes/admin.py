@@ -7,6 +7,7 @@ from .models import (FavoriteRecipe, IngredientModel, RecipeIngredients,
 class RecipeIngredientsInline(admin.TabularInline):
     model = RecipeIngredients
     extra = 3
+    min_num = 1
 
 
 class RecipeModelAdmin(admin.ModelAdmin):

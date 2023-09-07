@@ -32,7 +32,7 @@ SECRET_KEY = os.getenv(
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'django_filters',
+    'django_extensions',
     'djoser',
     'corsheaders',
     'recipes',
@@ -106,7 +108,7 @@ else:
         'NAME': os.getenv('DB_NAME', default='postgres'),
         'USER': os.getenv('POSTGRES_USER', default='postgres'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD',
-                               default='Thispasswordisthirtyonesymbols!'),
+                              default='Thispasswordisthirtyonesymbols!'),
         'HOST': os.getenv('DB_HOST', default='db'), 
         'PORT': os.getenv('DB_PORT', default='5432'),
     }
@@ -146,10 +148,13 @@ DJOSER = {
         'user': 'users.serializers.AuthorSerializer',
     }
 }
+APPEND_SLASH = True
+# CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:80',
     'http://localhost:80',
     'http://nginx-1:80',
+    #'http://localhost:5173',
 ]
 
 # CORS_ALLOW_METHODS = (
@@ -196,8 +201,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = (BASE_DIR / 'static')
-# STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
+# STATIC_ROOT = (BASE_DIR / 'static')
+STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = (BASE_DIR / 'media')

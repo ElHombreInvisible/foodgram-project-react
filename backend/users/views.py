@@ -1,11 +1,14 @@
 from http import HTTPStatus
 
+from django.db.models import OuterRef, Subquery, Prefetch
 from django.contrib.auth import get_user_model
 from djoser.views import UserViewSet
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from recipes.models import RecipeModel
 
 from .models import Follow
 from .pagination import PageLimitPagination
@@ -68,4 +71,12 @@ class SubscribitionViewSet(viewsets.GenericViewSet,
     pagination_class = PageLimitPagination
 
     def get_queryset(self):
-        return User.objects.filter(followed_by__follower=self.request.user)
+        recipes_limit = self.request.GET.get('recipes_limit', default=3)
+        recipes_limit = int(recipes_limit)
+        recipes = RecipeModel.objects.filter(author_id=OuterRef("author_id")
+                                             )[:recipes_limit]
+        return User.objects.filter(followed_by__follower=self.request.user
+                                   ).prefetch_related(
+             Prefetch("recipes",
+                      queryset=RecipeModel.objects.filter(id__in=recipes)))
+        #return User.objects.filter(followed_by__follower=self.request.user)

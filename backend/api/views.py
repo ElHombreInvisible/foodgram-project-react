@@ -31,7 +31,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = IngredientModel.objects.all()
     serializer_class = IngredientSerializer
-    filterset_fields = ('name',)
+    # filterset_fields = ('^name',)
     filter_backends = (DjangoFilterBackend, )
     filterset_class = IngredientFilter
 
@@ -53,6 +53,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.request.method in ('POST', 'PUT', 'PATCH'):
             return PostRecipeSerializer
         return RecipeSerializer
+
+    def filter_queryset(self, queryset):
+        print(queryset)
+        return super().filter_queryset(queryset)
 
     @action(detail=True, methods=['POST', 'DELETE'],
             permission_classes=(IsAuthenticated,))
