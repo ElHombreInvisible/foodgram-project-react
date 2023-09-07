@@ -1,7 +1,7 @@
 from http import HTTPStatus
 
-from django.db.models import OuterRef, Subquery, Prefetch
 from django.contrib.auth import get_user_model
+from django.db.models import OuterRef, Prefetch
 from djoser.views import UserViewSet
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
@@ -79,4 +79,4 @@ class SubscribitionViewSet(viewsets.GenericViewSet,
                                    ).prefetch_related(
              Prefetch("recipes",
                       queryset=RecipeModel.objects.filter(id__in=recipes)))
-        #return User.objects.filter(followed_by__follower=self.request.user)
+        # return User.objects.filter(followed_by__follower=self.request.user)

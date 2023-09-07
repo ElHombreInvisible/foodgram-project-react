@@ -24,7 +24,7 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 class SubscribitionSerializer(serializers.ModelSerializer):
     is_subscribed = SerializerMethodField()
-    #recipes = SerializerMethodField()
+    # recipes = SerializerMethodField()
     recipes = FavoriteRecipeSerializer(many=True,)
     recipes_count = SerializerMethodField('get_recipes_count')
 
